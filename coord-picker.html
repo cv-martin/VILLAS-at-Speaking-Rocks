@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><title>Coordinate Picker</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #222; color: #0f0; font-family: monospace; }
+#output { position: fixed; top: 0; left: 0; right: 0; background: #000; padding: 10px; z-index: 100; font-size: 13px; max-height: 40vh; overflow-y: auto; border-bottom: 2px solid #0f0; }
+#wrapper { position: relative; display: inline-block; margin-top: 40vh; }
+#wrapper img { display: block; width: 688px; height: auto; }
+.dot { position: absolute; width: 14px; height: 14px; background: red; border: 2px solid yellow; border-radius: 50%; transform: translate(-50%,-50%); z-index: 10; pointer-events: none; font-size: 9px; color: white; text-align: center; line-height: 10px; }
+#cursor { position: fixed; bottom: 10px; left: 10px; background: #000; padding: 5px 10px; z-index: 100; font-size: 14px; }
+</style></head>
+<body>
+<div id="output"><b>Click on the CENTER of each lot polygon. Order: Lot 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18</b></div>
+<div id="wrapper">
+  <img id="platImg" src="assets/img/official-plat-map.png" alt="plat" />
+</div>
+<div id="cursor">Move mouse...</div>
+<script>
+const img = document.getElementById('platImg');
+const wrapper = document.getElementById('wrapper');
+const output = document.getElementById('output');
+const cursor = document.getElementById('cursor');
+const lotOrder = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,17,18];
+const results = [];
+let clickIdx = 0;
+
+wrapper.addEventListener('mousemove', function(e) {
+  const rect = img.getBoundingClientRect();
+  const px = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+  const py = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+  cursor.textContent = `x: ${px}%  y: ${py}%  |  Next click: Lot ${lotOrder[clickIdx] || 'DONE'}`;
+});
+
+wrapper.addEventListener('click', function(e) {
+  if (clickIdx >= lotOrder.length) return;
+  const rect = img.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+  
+  const dot = document.createElement('div');
+  dot.className = 'dot';
+  dot.style.left = x + '%';
+  dot.style.top = y + '%';
+  dot.textContent = lotOrder[clickIdx];
+  wrapper.appendChild(dot);
+  
+  results.push({ lot: lotOrder[clickIdx], x, y });
+  clickIdx++;
+  
+  let html = '<b>COORDINATES (copy the JS array below):</b><br>';
+  results.forEach(r => {
+    html += `Lot ${r.lot}: x=${r.x}, y=${r.y}<br>`;
+  });
+  if (clickIdx >= lotOrder.length) {
+    html += '<br><b>ALL DONE! JS Array:</b><br><textarea style="width:100%;height:200px;background:#111;color:#0f0;font-family:monospace;">';
+    html += 'const coords = {\n';
+    results.forEach(r => {
+      html += `  ${r.lot}: { x: ${r.x}, y: ${r.y} },\n`;
+    });
+    html += '};\n';
+    html += '</textarea>';
+  }
+  output.innerHTML = html;
+});
+</script>
+</body></html>
